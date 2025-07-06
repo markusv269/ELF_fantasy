@@ -1,6 +1,12 @@
 import streamlit as st
 import pandas as pd
 import requests
+from team_name_mapping import team_name_mapping
+
+picture_to_full_name = {
+    v["picture_code"]: v["full_name"]
+    for v in team_name_mapping.values()
+}
 
 st.set_page_config(page_title="ELF Fantasy Spieler", layout="wide")
 st.title("🏈 European League Fantasy Spielerübersicht")
@@ -19,11 +25,11 @@ for player in raw_data["data"]:
     base = {
         "Name": player.get("cbsname"),
         "Position": player.get("pos_short"),
-        "Team": player.get("teamshort"),
-        "Wert (€)": player.get("value"),
-        "Prognose": player.get("ff_pred"),
+        "Team": picture_to_full_name.get(player.get("teamshort"), None),
+        "Wert (GC)": player.get("value"),
+        "Prediction": player.get("ff_pred"),
         "Status": player.get("status"),
-        "Uni": player.get("uni"),
+        "#": player.get("uni"),
         "Byeweeks": ", ".join(str(x) for x in player.get("byeweek", []))
     }
     ff_scores = player.get("data", {}).get("2025", {}).get("RS", {})
@@ -46,7 +52,7 @@ df_filtered = df[df["Position"].isin(pos_filter) & df["Team"].isin(team_filter)]
 
 # Übersicht
 st.subheader("📊 Spieler-Statistiken")
-st.dataframe(df_filtered.sort_values(by="Wert (€)", ascending=False), use_container_width=True)
+st.dataframe(df_filtered.sort_values(by="Wert (GC)", ascending=False), use_container_width=True)
 
 # Top-Woche-Spieler (z. B. Woche 5)
 if "Week 5" in df.columns:
